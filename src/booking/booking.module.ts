@@ -9,11 +9,7 @@ import { User } from 'src/user/entities/user.entity';
 import { ClassSlot } from 'src/class-slots/entities/class-slot.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Booking]),
-    TypeOrmModule.forFeature([User]),
-    TypeOrmModule.forFeature([ClassSlot]),
-  ],
+  imports: [TypeOrmModule.forFeature([Booking, User, ClassSlot])],
   controllers: [BookingController],
   providers: [BookingService, UserService, ClassSlotsService],
 })
