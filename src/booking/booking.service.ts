@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ClassSlotsService } from 'src/class-slots/class-slots.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Booking } from './entities/booking.entity';
@@ -16,39 +20,48 @@ export class BookingService {
     userId: number,
     classSlotId: number,
   ): Promise<Booking> {
-    // TODO: use transactions to ensure that the class slot is updated only if the booking is successful
+    try {
+      // * NOTE: ideally we should work with transactions to ensure that the classSlot is updated only if the booking is successfully completed
 
-    var booking = await this.findBookingByUserIdAndClassSlotId(
-      userId,
-      classSlotId,
-    );
+      var booking = await this.findBookingByUserIdAndClassSlotId(
+        userId,
+        classSlotId,
+      );
 
-    if (booking) {
-      throw new BadRequestException('User already booked this class');
+      if (booking) {
+        throw new BadRequestException('User already booked this class');
+      }
+
+      const classSlot = await this.classSlotsService.findAvailableClassSlot(
+        classSlotId,
+        new Date(),
+      );
+
+      if (!classSlot) {
+        throw new BadRequestException('No available Class Slot was found');
+      }
+
+      booking = new Booking({ userId, classSlotId });
+
+      await this.bookingRepository
+        .createQueryBuilder('bookings')
+        .insert()
+        .values(booking)
+        .execute();
+
+      classSlot.remainingSlots -= 1;
+
+      await this.classSlotsService.update(classSlot);
+
+      return booking;
+    } catch (error) {
+      console.error(error);
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException('Failed to create booking');
+      }
     }
-
-    const classSlot = await this.classSlotsService.findAvailableClassSlot(
-      classSlotId,
-      new Date(),
-    );
-
-    if (!classSlot) {
-      throw new BadRequestException('No available Class Slot was found');
-    }
-
-    booking = new Booking({ userId, classSlotId });
-
-    await this.bookingRepository
-      .createQueryBuilder('bookings')
-      .insert()
-      .values(booking)
-      .execute();
-
-    classSlot.remainingSlots -= 1;
-
-    await this.classSlotsService.update(classSlot);
-
-    return booking;
   }
 
   async findBookingByUserIdAndClassSlotId(

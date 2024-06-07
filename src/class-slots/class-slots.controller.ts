@@ -10,11 +10,7 @@ export class ClassSlotsController {
 
   @Post()
   async create(@Body() createClassSlotDto: CreateClassSlotDto) {
-    try {
-      return await this.classSlotsService.create(createClassSlotDto);
-    } catch (error) {
-      console.error(error);
-    }
+    return await this.classSlotsService.create(createClassSlotDto);
   }
 
   @Get()

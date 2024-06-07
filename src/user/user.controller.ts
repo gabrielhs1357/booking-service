@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -25,11 +26,14 @@ export class UserController {
     try {
       return await this.userService.create(createUserDto);
     } catch (error) {
+      console.error(error);
       if (
         error instanceof QueryFailedError &&
         error.message.includes('UNIQUE constraint')
       ) {
         throw new BadRequestException('User already exists');
+      } else {
+        throw new InternalServerErrorException('Failed to create user');
       }
     }
   }

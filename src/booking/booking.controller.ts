@@ -4,6 +4,7 @@ import {
   Body,
   BadRequestException,
   Get,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -20,26 +21,18 @@ export class BookingController {
 
   @Post()
   async createBooking(@Body() createBookingDto: CreateBookingDto) {
-    try {
-      const userId = createBookingDto.userId;
+    const userId = createBookingDto.userId;
 
-      if (!(await this.userService.findOneById(userId))) {
-        throw new BadRequestException(`User with id = ${userId} was not found`);
-      }
+    await this.userService.validateUser(userId);
 
-      const classSlotId = createBookingDto.classSlotId;
+    const classSlotId = createBookingDto.classSlotId;
 
-      const booking = await this.bookingService.findAvailableSlotAndMakeBooking(
-        userId,
-        classSlotId,
-      );
+    const booking = await this.bookingService.findAvailableSlotAndMakeBooking(
+      userId,
+      classSlotId,
+    );
 
-      return booking;
-    } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-    }
+    return booking;
   }
 
   @Get()

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ClassSlot } from './entities/class-slot.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -25,7 +25,12 @@ export class ClassSlotsService {
   }
 
   async update(classSlot: ClassSlot): Promise<ClassSlot> {
-    return await this.classSlotRepository.save(classSlot);
+    try {
+      return await this.classSlotRepository.save(classSlot);
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Failed to update class slot');
+    }
   }
 
   async findAll(): Promise<ClassSlot[]> {
@@ -33,6 +38,11 @@ export class ClassSlotsService {
   }
 
   async create(createClassSlotDto: CreateClassSlotDto): Promise<ClassSlot> {
-    return await this.classSlotRepository.save(createClassSlotDto);
+    try {
+      return await this.classSlotRepository.save(createClassSlotDto);
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Failed to create class slot');
+    }
   }
 }
